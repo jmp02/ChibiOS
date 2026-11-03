@@ -108,6 +108,19 @@
 /** @} */
 
 /**
+ * @name    RCC_PLLxCFGR register helpers
+ * @note    Input frequency ranges, as used by the generated clock tree.
+ * @{
+ */
+#define RCC_PLL1CFGR_PLL1RGE_4TO8           (0U << RCC_PLL1CFGR_PLL1RGE_Pos)
+#define RCC_PLL1CFGR_PLL1RGE_8TO16          (3U << RCC_PLL1CFGR_PLL1RGE_Pos)
+#define RCC_PLL2CFGR_PLL2RGE_4TO8           (0U << RCC_PLL2CFGR_PLL2RGE_Pos)
+#define RCC_PLL2CFGR_PLL2RGE_8TO16          (3U << RCC_PLL2CFGR_PLL2RGE_Pos)
+#define RCC_PLL3CFGR_PLL3RGE_4TO8           (0U << RCC_PLL3CFGR_PLL3RGE_Pos)
+#define RCC_PLL3CFGR_PLL3RGE_8TO16          (3U << RCC_PLL3CFGR_PLL3RGE_Pos)
+/** @} */
+
+/**
  * @name    Board-defined oscillator mode helpers
  * @{
  */
