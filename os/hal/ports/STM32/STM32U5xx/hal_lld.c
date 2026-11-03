@@ -106,7 +106,7 @@ const halclkcfg_t hal_clkcfg_reset = {
  * @note    This is the configuration defined in mcuconf.h.
  */
 const halclkcfg_t hal_clkcfg_default = {
-  .pwr_vosr             = STM32_CFG_PWR_VOSR,
+  .pwr_vosr             = STM32_CFG_PWR_VOSR   | STM32_PWR_VOSR_BOOSTEN_BITS,
   .rcc_cr               = STM32_CR_HSI16_BITS  | STM32_CR_HSI48_BITS |
                           STM32_CR_SHSI_BITS   | STM32_CR_HSE_BITS   |
                           STM32_CR_MSIS_BITS   | STM32_CR_MSIK_BITS  |
@@ -153,6 +153,7 @@ const halclkcfg_t hal_clkcfg_default = {
   .plls = {
     [0] = {
       .cfgr             = STM32_PLL1IN_BITS    | STM32_PLL1REF_BITS  |
+                          STM32_PLL1MBOOST_BITS |
 #if STM32_PLL1P_ENABLED == TRUE
                           RCC_PLL1CFGR_PLL1PEN |
 #endif
@@ -379,12 +380,20 @@ static bool hal_lld_clock_configure(const halclkcfg_t *ccp) {
   hal_lld_set_coreclock(4000000U);
   halRegWrite32X(&FLASH->ACR, STM32_FLASH_ACR_RESET, true);
 
-  /* Voltage scaling must be ready before high-frequency clocks are used.*/
-  halRegWrite32X(&PWR->VOSR, ccp->pwr_vosr, true);
+  /* Voltage scaling must be ready before high-frequency clocks are used.
+     The EPOD booster stays off until its clock has been configured, see
+     the PLL setup below.*/
+  halRegWrite32X(&PWR->VOSR, ccp->pwr_vosr & ~PWR_VOSR_BOOSTEN, true);
   if (halRegWaitAllSet32X(&PWR->VOSR,
                           PWR_VOSR_VOSRDY,
                           STM32_REGULATORS_TRANSITION_TIME,
                           NULL)) {
+    return true;
+  }
+  if (halRegWaitAllClear32X(&PWR->VOSR,
+                            PWR_VOSR_BOOSTRDY,
+                            STM32_PLL_STARTUP_TIME,
+                            NULL)) {
     return true;
   }
 
@@ -441,6 +450,19 @@ static bool hal_lld_clock_configure(const halclkcfg_t *ccp) {
   hal_lld_pll_setup(0U, &ccp->plls[0]);
   hal_lld_pll_setup(1U, &ccp->plls[1]);
   hal_lld_pll_setup(2U, &ccp->plls[2]);
+
+  /* EPOD booster, required above 55MHz. Its clock is the PLL1 input clock
+     divided by PLL1MBOOST, both just set, and it must be ready before the
+     PLLs are started.*/
+  if ((ccp->pwr_vosr & PWR_VOSR_BOOSTEN) != 0U) {
+    halRegWrite32X(&PWR->VOSR, ccp->pwr_vosr, true);
+    if (halRegWaitAllSet32X(&PWR->VOSR,
+                            PWR_VOSR_BOOSTRDY,
+                            STM32_PLL_STARTUP_TIME,
+                            NULL)) {
+      return true;
+    }
+  }
 
   cr = ccp->rcc_cr | RCC_CR_MSISON;
   halRegWrite32X(&RCC->CR, cr, true);

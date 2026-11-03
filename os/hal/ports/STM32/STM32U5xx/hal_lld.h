@@ -343,6 +343,25 @@
 #error "invalid STM32_HCLK frequency specified"
 #endif
 
+/**
+ * @brief   EPOD booster setting for @p PWR_VOSR.
+ * @note    The booster is required above 55MHz (ranges 1 and 2).
+ */
+#if (STM32_SYSCLK_FREQ > 55000000U) || defined(__DOXYGEN__)
+#define STM32_PWR_VOSR_BOOSTEN_BITS         PWR_VOSR_BOOSTEN
+#else
+#define STM32_PWR_VOSR_BOOSTEN_BITS         0U
+#endif
+
+/**
+ * @brief   EPOD booster prescaler setting for @p RCC_PLL1CFGR.
+ * @note    The booster clock is the PLL1 input clock divided by PLL1MBOOST,
+ *          it must be within 4...16MHz, this setting aims at 8MHz.
+ */
+#define STM32_PLL1MBOOST_BITS                                               \
+  ((((STM32_PLL1IN_FREQ / 8000000U) > 16U ? 16U :                           \
+     (STM32_PLL1IN_FREQ / 8000000U)) / 2U) << RCC_PLL1CFGR_PLL1MBOOST_Pos)
+
 #if STM32_CFG_CLOCK_DYNAMIC == TRUE
 #define HAL_LLD_USE_CLOCK_MANAGEMENT
 #endif
