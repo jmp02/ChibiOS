@@ -846,7 +846,7 @@
         <input point="MSIS" encoding="0U" default="yes" />
         <input point="HSI16" encoding="1U" />
         <input point="HSE" encoding="2U" />
-        <input point="PLL1P" encoding="3U" />
+        <input point="PLL1R" encoding="3U" />
       </mux>
     </clock>
     <clock point="HCLK" enable="always" dynamic="yes">
