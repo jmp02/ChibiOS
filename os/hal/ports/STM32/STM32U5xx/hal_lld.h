@@ -163,6 +163,9 @@
 
 #include "clocktree.h"
 
+/* ICache handler.*/
+#include "stm32_icache.inc"
+
 /**
  * @name    Static register initialization settings
  * @{
