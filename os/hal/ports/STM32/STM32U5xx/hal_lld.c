@@ -522,6 +522,11 @@ void hal_lld_init(void) {
      bootloader in case of NO_INIT.*/
   hal_lld_set_coreclock(STM32_HCLK_CLOCK);
 
+  /* DMA subsystems initialization.*/
+#if defined(STM32_DMA3_REQUIRED)
+  dma3Init();
+#endif
+
   /* NVIC initialization.*/
   nvicInit();
 
