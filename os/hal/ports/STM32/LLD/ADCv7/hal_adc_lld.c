@@ -30,6 +30,21 @@
 /* Driver local definitions.                                                 */
 /*===========================================================================*/
 
+#if defined(STM32U5XX)
+/* The U5's ADC1 has the U3 ADC's register model under other names: H7-style
+   watchdog threshold registers, VSENSEEN for TSEN, and no dual-mode data
+   format in the common block (it serves ADC1 alone).*/
+#define AWD1LTR                         LTR1
+#define AWD1HTR                         HTR1
+#define AWD2LTR                         LTR2
+#define AWD2HTR                         HTR2
+#define AWD3LTR                         LTR3
+#define AWD3HTR                         HTR3
+#define ADC_CCR_TSEN                    ADC_CCR_VSENSEEN
+#define ADC_CCR_DAMDF_Pos               0U
+#define ADC_CCR_DAMDF_Msk               0U
+#endif
+
 #if STM32_ADC_DUAL_MODE
 #if STM32_ADC_COMPACT_SAMPLES
 /* Compact type dual mode.*/
@@ -101,6 +116,11 @@ static void adc_lld_vreg_on(ADCDriver *adcp) {
 #if STM32_ADC_DUAL_MODE
   adcp->adcs->CR = 0U;
   adcp->adcs->CR = ADC_CR_ADVREGEN;
+#endif
+#if defined(STM32U5XX)
+  /* The U5's ADC1 flags its regulator as ready.*/
+  while ((adcp->adcm->ISR & ADC_ISR_LDORDY) == 0U) {
+  }
 #endif
   osalSysPolledDelayX(OSAL_US2RTC(STM32_HCLK, 20U));
 }

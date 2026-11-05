@@ -256,8 +256,8 @@
 /*===========================================================================*/
 
 /* Supported devices checks.*/
-#if !defined(STM32U3XX)
-#error "ADCv7 only supports STM32U3 devices"
+#if !defined(STM32U3XX) && !defined(STM32U5XX)
+#error "ADCv7 only supports STM32U3 devices and the STM32U5's ADC1"
 #endif
 
 /* Registry checks.*/
