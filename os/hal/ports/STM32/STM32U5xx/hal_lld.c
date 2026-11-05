@@ -446,6 +446,16 @@ static bool hal_lld_clock_configure(const halclkcfg_t *ccp) {
     return true;
   }
 
+  /* The PLLs were switched off above, SYSCLK being MSIS by now, but only
+     stop a few cycles later: their configuration registers may only be
+     written once PLLxRDY is low (a bootloader leaves PLL1 running).*/
+  if (halRegWaitAllClear32X(&RCC->CR,
+                            RCC_CR_PLL1RDY | RCC_CR_PLL2RDY | RCC_CR_PLL3RDY,
+                            STM32_PLL_STARTUP_TIME,
+                            NULL)) {
+    return true;
+  }
+
   /* PLL setup and activation. Fractional mode is intentionally unused yet.*/
   hal_lld_pll_setup(0U, &ccp->plls[0]);
   hal_lld_pll_setup(1U, &ccp->plls[1]);
