@@ -515,7 +515,7 @@ typedef struct {
   volatile uint32_t     RCR;
   volatile uint32_t     CCR[4];
   volatile uint32_t     BDTR;
-#if defined(STM32G4)
+#if defined(STM32G4) || defined(STM32U5XX)
   volatile uint32_t     CCXR[2];
   volatile uint32_t     CCMR3;
   volatile uint32_t     DTR2;
