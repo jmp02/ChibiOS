@@ -124,6 +124,13 @@ __STATIC_FORCEINLINE void i2c_dma_release(I2CDriver *i2cp) {
 
 __STATIC_FORCEINLINE void i2c_dma_disable(I2CDriver *i2cp) {
 
+  /* i2c_lld_soft_stop() releases the channel while the peripheral stays
+     enabled: an interrupt already pending at that point (a NACK after the
+     transfer ended) arrives here without one.*/
+  if (i2cp->dma == NULL) {
+    return;
+  }
+
 #if defined(STM32_DMA3_PRESENT)
   dma3ChannelDisable(i2cp->dma);
 #else
@@ -746,6 +753,13 @@ void i2c_lld_soft_stop(I2CDriver *i2cp) {
 
   /* If not in stopped state then release the DMA channel.*/
   if (i2cp->state != I2C_STOP) {
+    /* No more interrupts from the peripheral until i2c_lld_start(): unlike
+       I2Cv2 the vectors stay enabled, and a late NACK (a timed-out transfer,
+       or a repeated address phase after a NACK) would otherwise run the ISR
+       with no DMA channel. i2c_lld_start() rewrites CR1.*/
+    i2cp->i2c->CR1 &= ~(I2C_CR1_TXIE | I2C_CR1_RXIE | I2C_CR1_ADDRIE |
+                        I2C_CR1_NACKIE | I2C_CR1_STOPIE | I2C_CR1_TCIE |
+                        I2C_CR1_ERRIE);
 #if STM32_I2C_USE_DMA == TRUE
     i2c_dma_release(i2cp);
     i2cp->dma = NULL;
